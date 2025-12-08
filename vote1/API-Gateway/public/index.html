@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Voting System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        input {
+            padding: 12px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            width: 200px;
+            font-size: 14px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .candidate {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .candidate-info {
+            flex-grow: 1;
+        }
+        .vote-count {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .winner {
+            background-color: #e8f5e9;
+            border: 2px solid #4CAF50;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .admin-section {
+            background-color: #fff3e0;
+            border: 1px solid #ffe0b2;
+        }
+        .refresh-button {
+            background-color: #2196F3;
+        }
+        .refresh-button:hover {
+            background-color: #1976D2;
+        }
+        .reset-button {
+            background-color: #f44336;
+        }
+        .reset-button:hover {
+            background-color: #d32f2f;
+        }
+        .end-button {
+            background-color: #ff9800;
+        }
+        .end-button:hover {
+            background-color: #f57c00;
+        }
+        .login-section {
+            background-color: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .user-info {
+            background-color: #e8f5e9;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+        .role-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .voter-badge {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .admin-badge {
+            background-color: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Blockchain Voting System</h1>
+
+    <!-- Login Section -->
+    <div id="loginSection" class="container login-section">
+        <h2>Login to Vote</h2>
+        <div style="margin-bottom: 15px;">
+            <p style="color: #666; margin-bottom: 10px;">Please login with your credentials:</p>
+            <div style="margin-bottom: 10px;">
+                <label for="username" style="display: block; margin-bottom: 5px;">Username:</label>
+                <input type="text" id="username" placeholder="Enter username (voter or admin)">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label for="password" style="display: block; margin-bottom: 5px;">Password:</label>
+                <input type="password" id="password" placeholder="Enter password">
+            </div>
+            <button onclick="login()" style="width: 100%;">Login</button>
+        </div>
+        <div id="loginStatus"></div>
+        <div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
+            <p style="margin: 0; color: #666; font-size: 14px;">
+                <strong>Demo Credentials:</strong><br>
+                Voter: username="voter", password="voter123"<br>
+                Admin: username="admin", password="admin123"
+            </p>
+        </div>
+    </div>
+
+    <!-- User Info Section -->
+    <div id="userInfoSection" class="container user-info hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                Logged in as: <span id="loggedInUser" style="font-weight: bold;"></span>
+                <span id="userRole" class="role-badge"></span>
+            </div>
+            <button onclick="logout()" style="background-color: #f44336;">Logout</button>
+        </div>
+    </div>
+    
+    <div id="electionDetails" class="container hidden">
+        <h2>Election Details</h2>
+        <div id="electionName">Loading election name...</div>
+        <div id="electionDescription">Loading description...</div>
+        <div id="electionTiming">
+            <div>Start Time: <span id="startTime">Loading...</span></div>
+            <div>End Time: <span id="endTime">Loading...</span></div>
+        </div>
+        <div id="electionStatus" class="status">Checking election status...</div>
+    </div>
+
+    <!-- Admin Section -->
+    <div id="adminSection" class="container admin-section hidden">
+        <h2>Admin Controls</h2>
+        <div class="container">
+            <h3>Add Candidate</h3>
+            <input type="text" id="candidateName" placeholder="Enter candidate name">
+            <button onclick="addCandidate()">Add Candidate</button>
+            <div id="addCandidateStatus"></div>
+        </div>
+        <div class="container">
+            <button class="reset-button" onclick="resetVoting()">Reset Voting</button>
+            <button class="end-button" onclick="endVoting()">End Voting</button>
+            <div id="adminStatus"></div>
+        </div>
+    </div>
+
+    <!-- Voter Section -->
+    <div id="voterSection" class="container hidden">
+        <h2>Cast Your Vote</h2>
+        <input type="number" id="candidateId" placeholder="Enter candidate ID">
+        <button onclick="castVote()">Vote</button>
+        <div id="voteStatus"></div>
+    </div>
+
+    <div class="container">
+        <h2>Results</h2>
+        <button class="refresh-button" onclick="getResults()">Refresh Results</button>
+        <div id="results" class="loading">Loading results...</div>
+        <div id="finalResults" style="display: none;">
+            <h3>Final Election Results</h3>
+            <div id="finalResultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3001/api/blockchain';
+        let isVotingActive = true;
+        let currentUser = null;
+        let userRole = null;
+
+        // Login function
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const statusDiv = document.getElementById('loginStatus');
+
+            if (!username || !password) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Please enter both username and password';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Invalid credentials');
+                }
+
+                const data = await response.json();
+                currentUser = data.username;
+                userRole = data.role;
+                updateUI();
+                statusDiv.className = 'status success';
+                statusDiv.textContent = data.message;
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Login failed: ' + error.message;
+            }
+        }
+
+        // Logout function
+        function logout() {
+            currentUser = null;
+            userRole = null;
+            updateUI();
+            document.getElementById('loginStatus').textContent = 'Logged out successfully';
+        }
+
+        // Update UI based on user role
+        function updateUI() {
+            const loginSection = document.getElementById('loginSection');
+            const userInfoSection = document.getElementById('userInfoSection');
+            const adminSection = document.getElementById('adminSection');
+            const voterSection = document.getElementById('voterSection');
+            const electionDetails = document.getElementById('electionDetails');
+
+            if (currentUser) {
+                loginSection.classList.add('hidden');
+                userInfoSection.classList.remove('hidden');
+                electionDetails.classList.remove('hidden');
+                
+                document.getElementById('loggedInUser').textContent = currentUser;
+                const roleBadge = document.getElementById('userRole');
+                roleBadge.textContent = userRole.toUpperCase();
+                roleBadge.className = `role-badge ${userRole}-badge`;
+
+                if (userRole === 'admin') {
+                    adminSection.classList.remove('hidden');
+                    voterSection.classList.add('hidden');
+                } else {
+                    adminSection.classList.add('hidden');
+                    voterSection.classList.remove('hidden');
+                }
+            } else {
+                loginSection.classList.remove('hidden');
+                userInfoSection.classList.add('hidden');
+                adminSection.classList.add('hidden');
+                voterSection.classList.add('hidden');
+                electionDetails.classList.add('hidden');
+            }
+        }
+
+        // Get election name and status
+        async function getElectionName() {
+            try {
+                const response = await fetch(`${API_URL}/electionName`);
+                const data = await response.json();
+                document.getElementById('electionName').textContent = `Election: ${data.electionName}`;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('electionName').textContent = 'Error loading election name';
+            }
+        }
+
+        // Add candidate
+        async function addCandidate() {
+            const name = document.getElementById('candidateName').value;
+            const statusDiv = document.getElementById('addCandidateStatus');
+            
+            if (!name) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Please enter a candidate name';
+                return;
+            }
+
+            statusDiv.className = 'status';
+            statusDiv.textContent = 'Adding candidate...';
+            
+            try {
+                const response = await fetch(`${API_URL}/addCandidate?candidateName=${encodeURIComponent(name)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentUser}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add candidate');
+                }
+
+                const data = await response.json();
+                statusDiv.className = 'status success';
+                statusDiv.textContent = data.message;
+                document.getElementById('candidateName').value = '';
+                getResults();
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Error adding candidate: ' + error.message;
+            }
+        }
+
+        // Cast vote
+        async function castVote() {
+            if (!isVotingActive) {
+                const statusDiv = document.getElementById('voteStatus');
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Voting has ended. You cannot cast votes anymore.';
+                return;
+            }
+
+            const candidateId = document.getElementById('candidateId').value;
+            const statusDiv = document.getElementById('voteStatus');
+            
+            if (!candidateId) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Please enter a candidate ID';
+                return;
+            }
+
+            statusDiv.className = 'status';
+            statusDiv.textContent = 'Processing vote...';
+            
+            try {
+                const response = await fetch(`${API_URL}/Vote?candidateId=${candidateId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentUser}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to cast vote');
+                }
+
+                const data = await response.json();
+                statusDiv.className = 'status success';
+                statusDiv.textContent = data.message;
+                document.getElementById('candidateId').value = '';
+                getResults();
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Error casting vote: ' + error.message;
+            }
+        }
+
+        // Get results
+        async function getResults() {
+            const resultsDiv = document.getElementById('results');
+            const finalResultsDiv = document.getElementById('finalResults');
+            const finalResultsContent = document.getElementById('finalResultsContent');
+            
+            resultsDiv.className = 'loading';
+            resultsDiv.textContent = 'Loading results...';
+            
+            try {
+                const response = await fetch(`${API_URL}/getResults`);
+                const data = await response.json();
+                resultsDiv.className = '';
+                resultsDiv.innerHTML = '';
+                
+                if (data.candidates.length === 0) {
+                    resultsDiv.textContent = 'No candidates added yet';
+                    return;
+                }
+
+                // Sort candidates by vote count in descending order
+                const sortedCandidates = [...data.candidates].sort((a, b) => 
+                    parseInt(b.voteCount) - parseInt(a.voteCount)
+                );
+
+                sortedCandidates.forEach(candidate => {
+                    const candidateDiv = document.createElement('div');
+                    candidateDiv.className = 'candidate';
+                    if (candidate.id === data.winnerId) {
+                        candidateDiv.classList.add('winner');
+                    }
+                    
+                    candidateDiv.innerHTML = `
+                        <div class="candidate-info">
+                            <strong>${candidate.name}</strong> (ID: ${candidate.id})
+                        </div>
+                        <div class="vote-count">
+                            ${candidate.voteCount} votes
+                        </div>
+                    `;
+                    resultsDiv.appendChild(candidateDiv);
+                });
+
+                if (data.winnerId !== "0") {
+                    const winner = data.candidates.find(c => c.id === data.winnerId);
+                    const winnerDiv = document.createElement('div');
+                    winnerDiv.style.marginTop = '20px';
+                    winnerDiv.style.padding = '15px';
+                    winnerDiv.style.backgroundColor = '#e8f5e9';
+                    winnerDiv.style.borderRadius = '8px';
+                    winnerDiv.style.textAlign = 'center';
+                    winnerDiv.style.fontWeight = 'bold';
+                    winnerDiv.textContent = `Current Winner: ${winner.name} with ${winner.voteCount} votes`;
+                    resultsDiv.appendChild(winnerDiv);
+                }
+
+                // If voting has ended, show final results
+                if (!isVotingActive) {
+                    finalResultsDiv.style.display = 'block';
+                    finalResultsContent.innerHTML = `
+                        <div class="status success" style="margin-bottom: 20px;">
+                            Election has ended. Here are the final results:
+                        </div>
+                        <div class="candidate winner" style="margin-bottom: 20px;">
+                            <div class="candidate-info">
+                                <strong>Winner: ${sortedCandidates[0].name}</strong>
+                            </div>
+                            <div class="vote-count">
+                                ${sortedCandidates[0].voteCount} votes
+                            </div>
+                        </div>
+                        <h4>Final Vote Distribution:</h4>
+                        ${sortedCandidates.map((candidate, index) => `
+                            <div class="candidate ${index === 0 ? 'winner' : ''}">
+                                <div class="candidate-info">
+                                    ${index + 1}. ${candidate.name}
+                                </div>
+                                <div class="vote-count">
+                                    ${candidate.voteCount} votes
+                                </div>
+                            </div>
+                        `).join('')}
+                    `;
+                } else {
+                    finalResultsDiv.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultsDiv.className = 'status error';
+                resultsDiv.textContent = 'Error loading results: ' + error.message;
+            }
+        }
+
+        // Reset voting
+        async function resetVoting() {
+            if (!confirm('Are you sure you want to reset the voting? This will clear all votes.')) return;
+            
+            const statusDiv = document.getElementById('adminStatus');
+            statusDiv.className = 'status';
+            statusDiv.textContent = 'Resetting voting...';
+            
+            try {
+                const response = await fetch(`${API_URL}/resetVoting`);
+                const data = await response.json();
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = data.message;
+                isVotingActive = true;
+                getResults();
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Error resetting voting: ' + error.message;
+            }
+        }
+
+        // End voting
+        async function endVoting() {
+            if (!confirm('Are you sure you want to end the voting?')) return;
+            
+            const statusDiv = document.getElementById('adminStatus');
+            statusDiv.className = 'status';
+            statusDiv.textContent = 'Ending voting...';
+            
+            try {
+                const response = await fetch(`${API_URL}/endVoting`);
+                const data = await response.json();
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = data.message;
+                isVotingActive = false;
+                getResults();
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Error ending voting: ' + error.message;
+            }
+        }
+
+        // Get election details
+        async function getElectionDetails() {
+            try {
+                const response = await fetch(`${API_URL}/getElectionDetails`);
+                const data = await response.json();
+                
+                // Update election name
+                document.getElementById('electionName').textContent = `Election: ${data.name}`;
+                
+                // Update description
+                document.getElementById('electionDescription').textContent = `Description: ${data.description}`;
+                
+                // Update timing
+                const startDate = new Date(parseInt(data.startTime) * 1000);
+                const endDate = new Date(parseInt(data.endTime) * 1000);
+                document.getElementById('startTime').textContent = startDate.toLocaleString();
+                document.getElementById('endTime').textContent = endDate.toLocaleString();
+                
+                // Update status
+                const statusDiv = document.getElementById('electionStatus');
+                const now = Math.floor(Date.now() / 1000);
+                
+                if (now < data.startTime) {
+                    statusDiv.className = 'status';
+                    statusDiv.textContent = 'Voting has not started yet';
+                    isVotingActive = false;
+                } else if (now > data.endTime) {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = 'Voting has ended';
+                    isVotingActive = false;
+                    // Show final results when election ends
+                    getResults();
+                } else {
+                    statusDiv.className = 'status success';
+                    statusDiv.textContent = 'Voting is active';
+                    isVotingActive = true;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('electionStatus').textContent = 'Error checking election status';
+            }
+        }
+
+        // Initialize
+        updateUI();
+        getElectionName();
+        getElectionDetails();
+        getResults();
+
+        // Refresh results every 30 seconds
+        setInterval(getResults, 30000);
+        // Check election status every minute
+        setInterval(getElectionDetails, 60000);
+    </script>
+</body>
+</html> 
